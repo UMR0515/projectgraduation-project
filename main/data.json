@@ -1,0 +1,4 @@
+{
+    "clear_first_row": "import openpyxl\nwb = openpyxl.load_workbook(\"example.xlsx\")\nws = wb.active\nws.delete_rows(1)\nwb.save(\"example.xlsx\")",
+    "delete_column": "import openpyxl\nwb = openpyxl.load_workbook(\"example.xlsx\")\nws = wb.active\nws.delete_cols(2)\nwb.save(\"example.xlsx\")"
+}
