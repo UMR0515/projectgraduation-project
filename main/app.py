@@ -1,12 +1,6 @@
 from flask import Flask, request, jsonify, send_file, render_template
-import json
-import os
 
-app = Flask(__name__)
-
-# 從 data.json 讀取腳本模板
-with open("C:\\Users\\Acer\\Desktop\\py入門\\專案\\EXCEL\\main\\data.json", "r", encoding="utf-8") as f:
-    SCRIPT_TEMPLATES = json.load(f)
+app = Flask(__name__, static_folder=".", template_folder=".")
 
 @app.route("/")
 def index():
@@ -17,21 +11,31 @@ def generate_script():
     data = request.json
     operation = data.get("operation")
 
-    if operation not in SCRIPT_TEMPLATES:
-        return jsonify({"error": "Invalid operation"}), 400
+    # 根據操作生成 Python 腳本
+    if operation == "clear_first_row":
+        script = """import pandas as pd
+df = pd.read_excel("input.xlsx")
+df.iloc[0] = None  # 清空第一行
+df.to_excel("output.xlsx", index=False)"""
+    elif operation == "delete_column":
+        script = """import pandas as pd
+df = pd.read_excel("input.xlsx")
+df.drop(df.columns[1], axis=1, inplace=True)  # 刪除第二欄
+df.to_excel("output.xlsx", index=False)"""
+    else:
+        return jsonify({"error": "無效的操作"})
 
-    script_content = SCRIPT_TEMPLATES[operation]
-    
-    # 把程式碼寫入檔案，提供下載
-    script_filename = "generated_script.py"
-    with open(script_filename, "w", encoding="utf-8") as f:
-        f.write(script_content)
+    return jsonify({"script": script})
 
-    return jsonify({"script": script_content, "download_url": "/download_script"})
-
-@app.route("/download_script", methods=["GET"])
+@app.route("/download_script")
 def download_script():
-    return send_file("generated_script.py", as_attachment=True)
+    # 假設生成的腳本保存在當前目錄下
+    script_path = "generated_script.py"
+    with open(script_path, "w") as f:
+        f.write("""import pandas as pd
+df = pd.read_excel("input.xlsx")
+df.to_excel("output.xlsx", index=False)""")
+    return send_file(script_path, as_attachment=True)
 
 if __name__ == "__main__":
     app.run(debug=True)
